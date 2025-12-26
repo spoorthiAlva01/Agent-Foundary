@@ -3,13 +3,12 @@ from core.recommendation_schema import RecommendationOutput, Recommendation
 
 class RecommendationAgent:
     def __init__(self, llm):
-        self.llm = llm  # kept for future real LLMs
+        self.llm = llm  # future use
 
     def recommend(self, execution_result) -> RecommendationOutput:
         insights = []
         metrics = {}
 
-        # Extract data from executor output
         for step in execution_result:
             if "fetch_data" in step:
                 metrics = step["fetch_data"]
@@ -18,31 +17,45 @@ class RecommendationAgent:
 
         recommendations = []
 
-        # Deterministic reasoning (this is GOOD)
+        # --- Heuristic confidence calculation ---
+        def confidence(base, boost=0.0):
+            return min(base + boost, 1.0)
+
+        # Low CTR → Creative issue
         if "Low CTR" in insights:
+            ctr = metrics.get("ctr", 0)
+
+            severity_boost = 0.1 if ctr < 0.7 else 0.0
+
             recommendations.append(
                 Recommendation(
                     recommendation="Improve ad creatives and messaging",
                     reason="Low CTR indicates ads are not resonating with the audience",
-                    confidence=0.8
+                    confidence=confidence(0.7, severity_boost)
                 )
             )
 
+        # Low ROAS → Budget efficiency issue
         if "Low ROAS" in insights:
+            roas = metrics.get("roas", 0)
+
+            severity_boost = 0.1 if roas < 1.5 else 0.0
+
             recommendations.append(
                 Recommendation(
                     recommendation="Reallocate budget to higher-performing segments",
                     reason="Low ROAS suggests inefficient spend allocation",
-                    confidence=0.75
+                    confidence=confidence(0.65, severity_boost)
                 )
             )
 
+        # No major issues
         if not recommendations:
             recommendations.append(
                 Recommendation(
                     recommendation="Maintain current strategy with minor optimizations",
                     reason="No major performance issues detected",
-                    confidence=0.6
+                    confidence=0.55
                 )
             )
 

@@ -16,35 +16,25 @@ def main():
     # -----------------------------
     llm = FakeLLM()
 
-    # -----------------------------
-    # Planner
-    # -----------------------------
     planner = PlannerAgent(llm)
 
-    # -----------------------------
-    # Tool Registry
-    # -----------------------------
     registry = ToolRegistry()
     registry.register(FetchData())
     registry.register(AnalyzeData())
 
-    # -----------------------------
-    # Executor
-    # -----------------------------
     executor = ExecutorAgent(registry)
-
-    # -----------------------------
-    # Recommendation & Critic Agents
-    # -----------------------------
     recommender = RecommendationAgent(llm)
     critic = CriticAgent()
 
     # -----------------------------
+    # USER INPUT
+    # -----------------------------
+    user_input = input("\n🧑 Enter your request: ")
+
+    # -----------------------------
     # Run pipeline
     # -----------------------------
-    plan = planner.plan(
-        "Analyze my campaign performance and suggest improvements"
-    )
+    plan = planner.plan(user_input)
 
     print("\n=== PLAN ===")
     print(plan)
@@ -61,9 +51,6 @@ def main():
         print(f"- {r.recommendation} ({r.confidence})")
         print(f"  Reason: {r.reason}")
 
-    # -----------------------------
-    # Critic Review
-    # -----------------------------
     critic_result = critic.evaluate(recommendations)
 
     print("\n=== CRITIC REVIEW ===")
@@ -72,6 +59,7 @@ def main():
         print(f"  Verdict: {f.verdict}")
         print(f"  Confidence: {f.confidence}")
         print(f"  Reason: {f.reason}")
+
 
 
 if __name__ == "__main__":
